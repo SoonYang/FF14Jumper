@@ -4,6 +4,7 @@ import win32con
 import datetime
 import sys
 import time
+import win32gui
 
 
 def find_window(title):
@@ -13,9 +14,6 @@ def find_window(title):
 
 def mouse_click(hw):
     """click"""
-    hw.SetForegroundWindow()    # bring to front
-    hw.SetActiveWindow()        # set as active
-    hw.SetFocus()               # set as focus
     send_key(hw, win32con.MK_LBUTTON)           # left click
 
 
@@ -34,8 +32,6 @@ def log(text):
 def jump(hw):
     """jump"""
     log("Jumping...")
-    win32gui.SetForegroundWindow(hw)   # bring to front
-    win32gui.SetActiveWindow(hw)       # set as active
     send_key(hw, 0x57)                 # W
     send_key(hw, 0x53)                 # S
     send_key(hw, win32con.VK_SPACE)
@@ -44,18 +40,26 @@ def jump(hw):
 
 def loop_jump(hw, minute, kill_event):
     """loop jump"""
-    interval = 60 * minute
+    interval = minute * 60
+    nextTime = datetime.datetime.now()
     while not kill_event.wait(1):
-        t = threading.Thread(target=jump, args=(hw,))
-        t.start()
-        t.join()
-        log("Sleep for {interval} seconds...".format(interval=interval))
-        time.sleep(interval)
+        if(datetime.datetime.now() >= nextTime):
+            hw = find_window(ff14_class_name)
+            if(hw == 0):
+                print("FFXIV Window not found")
+            else:
+                t = threading.Thread(target=jump, args=(hw,))
+                t.start()
+                t.join()
+            log("Sleep for {interval} seconds...".format(interval=interval))
+            nextTime = datetime.datetime.now() + datetime.timedelta(seconds=interval)
+        time.sleep(1)
+
+
+ff14_class_name = "FINAL FANTASY XIV"
 
 
 def main():
-    ff14_class_name = "FINAL FANTASY XIV"
-
     hw = find_window(ff14_class_name)
 
     if(hw == 0):
@@ -81,8 +85,6 @@ def main():
         kill_event.set()
         log("Stopping...")
         t.join()
-
-    exit(0)
 
 
 if __name__ == "__main__":
