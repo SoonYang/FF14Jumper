@@ -22,6 +22,7 @@ def mouse_click(hw):
 def send_key(hw, key):
     """send key"""
     win32gui.SendMessage(hw, win32con.WM_KEYDOWN, key, 0)
+    time.sleep(0.5)
     win32gui.SendMessage(hw, win32con.WM_KEYUP, key, 0)
 
 
@@ -33,15 +34,17 @@ def log(text):
 def jump(hw):
     """jump"""
     log("Jumping...")
-    hw.SetForegroundWindow()    # bring to front
-    hw.SetActiveWindow()        # set as active
-    hw.SetFocus()               # set as focus
+    win32gui.SetForegroundWindow(hw)   # bring to front
+    win32gui.SetActiveWindow(hw)       # set as active
+    send_key(hw, 0x57)                 # W
+    send_key(hw, 0x53)                 # S
     send_key(hw, win32con.VK_SPACE)
     log("Jumped!")
 
 
-def loop_jump(hw, interval, kill_event):
+def loop_jump(hw, minute, kill_event):
     """loop jump"""
+    interval = 60 * minute
     while not kill_event.wait(1):
         t = threading.Thread(target=jump, args=(hw,))
         t.start()
